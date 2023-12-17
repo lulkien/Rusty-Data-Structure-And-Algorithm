@@ -1,72 +1,87 @@
-struct MyLinkedList {
+struct QNode {
     data: Option<i32>,
-    next: Option<Box<MyLinkedList>>,
+    next: Option<Box<QNode>>,
 }
 
-impl MyLinkedList {
+struct QLinkedList {
+    head: Option<QNode>,
+    size: u32,
+}
+
+impl QLinkedList {
     fn new() -> Self {
-        MyLinkedList {
-            data: None,
-            next: None,
+        QLinkedList {
+            head: Some(QNode {
+                data: None,
+                next: None,
+            }),
+            size: 0,
         }
     }
 
-    fn push_front(&mut self, data: i32) {
-        let mut new_node = MyLinkedList::new();
-        new_node.data = Some(data);
-        new_node.next = self.next.take();
-
-        self.next = Some(Box::new(new_node));
+    fn push_front(&mut self, data: i32) -> &mut QLinkedList {
+        let first_node = self.head.as_mut().and_then(|head| head.next.take());
+        let new_node = QNode {
+            data: Some(data),
+            next: first_node,
+        };
+        self.head.as_mut().unwrap().next = Some(Box::new(new_node));
+        self.size += 1;
+        self
     }
 
-    fn push_back(&mut self, data: i32) {
-        let mut indexer = self;
-        while let Some(ref mut next) = indexer.next {
-            indexer = next;
+    fn pop_front(&mut self) -> &mut QLinkedList {
+        let first_node = self.head.as_mut().and_then(|head| head.next.take());
+        match first_node {
+            Some(node) => {
+                self.head.as_mut().unwrap().next = node.next;
+                self.size -= 1;
+            }
+            None => {
+                self.head.as_mut().unwrap().next = None;
+                self.size = 0;
+            }
         }
-
-        let mut new_node = MyLinkedList::new();
-        new_node.data = Some(data);
-        new_node.next = None;
-
-        indexer.next = Some(Box::new(new_node));
+        self
     }
 
-    fn count(&self) -> u32 {
-        let mut count: u32 = 0;
-        let mut indexer = self;
+    fn push_back(&mut self, data: i32) -> &mut QLinkedList {
+        unimplemented!()
+    }
 
-        while let Some(ref next) = indexer.next {
-            count += 1;
-            indexer = next;
-        }
-
-        count
+    fn pop_back(&mut self) -> &mut QLinkedList {
+        unimplemented!()
     }
 
     fn print(&self) {
-        let mut indexer = self;
+        let mut indexer = &self.head.as_ref().unwrap().next;
         let mut index: u32 = 0;
-        while let Some(ref next) = indexer.next {
-            match indexer.data {
-                Some(value) => {
-                    println!("Node {}: {}", index, value);
-                    index += 1;
-                }
-                None => println!("HEAD"),
+        while let Some(node) = indexer {
+            if let Some(data) = &node.data {
+                println!("Node {}: {}", index, data);
+            } else {
+                panic!("Something went wrong!!!");
             }
-            indexer = next;
+            index += 1;
+            indexer = &node.next;
         }
-        println!("Node {}: {}", index, indexer.data.unwrap_or_default());
-        println!("Count: {}", self.count());
+        println!("Size: {}", self.size);
+        println!("---------------------------");
     }
 }
 
 fn main() {
-    let mut ll = MyLinkedList::new();
-    ll.push_front(10);
-    ll.push_back(30);
-    ll.push_back(40);
+    let mut ll = QLinkedList::new();
 
+    ll.push_front(10).push_front(5).push_front(0);
+    ll.print();
+
+    ll.pop_front();
+    ll.print();
+
+    ll.pop_front();
+    ll.print();
+
+    ll.pop_front();
     ll.print();
 }
